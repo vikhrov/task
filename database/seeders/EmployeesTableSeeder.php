@@ -20,8 +20,8 @@ class EmployeesTableSeeder extends Seeder
         // Получаем данные о должностях внутри функции run
         $positions = DB::table('positions')->pluck('id')->toArray();
 
-        foreach (range(1, 250) as $index) {
-            $level = ceil($index / 50); // Розподілити співробітників між 5 рівнями
+        foreach (range(1, 50000) as $index) {
+            $level = ceil($index / 10000); // Розподілити співробітників між 5 рівнями
 
             $employee = [
                 'name' => $faker->name,

@@ -26,6 +26,7 @@
                         <div class="form-group">
                             <label for="name">Name:</label>
                             <input type="text" name="name" value="{{ old('name', $position->name) }}" class="form-control">
+                            <small id="charCount" style="text-align: end" class="form-text text-muted"></small>
                             @error('name')
                             <span class="text-danger">{{ $message }}</span>
                             @enderror

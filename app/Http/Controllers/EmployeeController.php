@@ -11,20 +11,27 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Exceptions\PostTooLargeException;
 use App\Models\Position;
+use App\Services\ImageService;
+use Illuminate\Support\Facades\Log;
+use App\Validators\EmployeeValidator;
 
 
 class EmployeeController extends Controller
 {
-    public function __construct()
+    public function __construct(ImageService $imageService)
     {
         $this->middleware('auth');
+        $this->imageService = $imageService;
     }
 
     public function index() {
 
+//        $employees = Employee::paginate(10);
         $employees = Employee::all();
         return view('employees', compact('employees'));
     }
+
+
 
 
     public function create()
@@ -36,57 +43,26 @@ class EmployeeController extends Controller
         return view('employees.create', compact('managers', 'positions', 'employee'));
     }
 
-    public function store(Request $request, Employee $employee)
+    public function store(Request $request)
     {
         try {
             $validatedData = $request->all();
-            $messages = [
-                'phone_number.*' => 'Invalid phone number, required format +380XXXXXXXXX',
-            ];
 
-            $validator = Validator::make($validatedData, [
-                'name' => 'required|string|min:2|max:256',
-                'position_id' => 'required|string',
-                'date_of_employment' => 'required|date',
-                'phone_number' => 'required|regex:/^\+380\d{9}$/',
-                'email' => 'required|email|unique:employees,email,' . $employee->id,
-                'salary' => 'required|numeric|between:0,500000',
-                'parent_id' => 'nullable|exists:employees,id',
-                'photo' => 'image|mimes:jpeg,png|max:5120|dimensions:min_width=300,min_height=300',
-            ], $messages);
-            if($validator->fails()){
+            $validator = Validator::make(
+                $validatedData,
+                EmployeeValidator::rules(),
+                EmployeeValidator::messages()
+            );
+
+            if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator->messages())->withInput();
             }
-//            dd($request->all());
-//            $employee->save($request->all());
-
 
             // Создание нового сотрудника
             $employee = Employee::create($validatedData);
 
             // Обработка фотографии
-            if ($request->hasFile('photo')) {
-                $uploadedFile = $request->file('photo');
-
-                // Генерация уникального имени для файла
-                $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
-
-                // Сохранение файла на сервере
-                $uploadedFile->storeAs('photos', $fileName, 'public');
-
-                // Изменение размера фотографии и ее сохранение
-                $image = Image::make(storage_path("app/public/photos/$fileName"))
-                    ->fit(300, 300, function ($constraint) {
-                        $constraint->upsize(); // Сохранение пропорций
-                    })
-                    ->orientate() // Автоматический поворот при необходимости
-                    ->encode('jpg', 80); // Сохранение в формате jpg с качеством 80%
-
-                Storage::put("public/photos/$fileName", $image);
-
-                // Обновление имени файла в базе данных
-                $employee->update(['photo' => $fileName]);
-            }
+            $this->imageService->processImage($request, $employee);
 
             // Перенаправление после успешного добавления
             return redirect()->route('employees.index')->with('success', 'Сотрудник успешно добавлен');
@@ -107,8 +83,76 @@ class EmployeeController extends Controller
         return response()->json($managers);
     }
 
+    // Fetch records
+    public function getEmployees(Request $request){
+
+        ## Read value
+        $draw = $request->get('draw');
+        $start = $request->get("start");
+        $rowperpage = $request->get("length"); // Rows display per page
+
+        $columnIndex_arr = $request->get('order');
+        $columnName_arr = $request->get('columns');
+        $order_arr = $request->get('order');
+        $search_arr = $request->get('search');
+
+        $columnIndex = $columnIndex_arr[0]['column']; // Column index
+        $columnName = $columnName_arr[$columnIndex]['data']; // Column name
+        $columnSortOrder = $order_arr[0]['dir']; // asc or desc
+        $searchValue = $search_arr['value']; // Search value
+
+        // Total records
+        $totalRecords = Employee::select('count(*) as allcount')->count();
+        $totalRecordswithFilter = Employee::select('count(*) as allcount')->where('name', 'like', '%' .$searchValue . '%')->count();
+
+        // Fetch records
+        $records = Employee::orderBy($columnName,$columnSortOrder)
+            ->where('employees.name', 'like', '%' .$searchValue . '%')
+            ->select('employees.*')
+            ->skip($start)
+            ->take($rowperpage)
+            ->get();
+
+        $data_arr = array();
+
+        foreach($records as $record){
+            $id = $record->id;
+            if ($record->photo) {
+                $photo = '<img src="' . asset("storage/photos/{$record->photo}") . '" style="max-width: 50px; max-height: 50px; border-radius: 50%; overflow: hidden;">';
+            } else {
+                $photo = '<div style="width: 50px; height: 50px; background-color: #ccc; border-radius: 50%;"></div>';
+            }
+            //            $photo = '<img src="' . $record->photo . '" alt="Photo" width="50" height="50">';
+            $name = $record->name;
+            $position = $record->position ? $record->position->name : '';
+            $date_of_employment = $record->date_of_employment;
+            $phone_number = $record->phone_number;
+            $email = $record->email;
+            $salary = $record->salary;
 
 
+
+            $data_arr[] = array(
+                "id" => $id,
+                "photo" => $photo,
+                "name" => $name,
+                "position" => $position,
+                "date_of_employment" => $date_of_employment,
+                "phone_number" => $phone_number,
+                "email" => $email,
+                "salary" => $salary,
+            );
+        }
+
+        $response = array(
+            "draw" => intval($draw),
+            "iTotalRecords" => $totalRecords,
+            "iTotalDisplayRecords" => $totalRecordswithFilter,
+            "aaData" => $data_arr
+        );
+
+        return response()->json($response);
+    }
 
     public function edit(Employee $employee)
     {
@@ -126,68 +170,47 @@ class EmployeeController extends Controller
         try {
             $validatedData = $request->all();
 
-            $messages = [
-                'phone_number.*' => 'Invalid phone number, required format +380XXXXXXXXX',
-            ];
+            $validator = Validator::make($validatedData, EmployeeValidator::rules($employee->id), EmployeeValidator::messages());
 
-            $validator = Validator::make($validatedData, [
-                'name' => 'required|string|min:2|max:256',
-                'position_id' => 'required|string',
-                'date_of_employment' => 'required|date',
-                'phone_number' => 'required|regex:/^\+380\d{9}$/',
-                'email' => 'required|email|unique:employees,email,' . $employee->id,
-                'salary' => 'required|numeric|between:0,500000',
-                'parent_id' => 'nullable|exists:employees,id',
-                'photo' => 'image|mimes:jpeg,png|max:5120|dimensions:min_width=300,min_height=300',
-
-            ], $messages);
 
             // Проверка наличия файла перед применением валидации изображения
-            if ($request->hasFile('photo')) {
-                $validator->validate();
-
-                // Обработка фотографии
-                $uploadedFile = $request->file('photo');
-                $fileName = time() . '_' . $uploadedFile->getClientOriginalName();
-
-                // Сохранение файла на сервере
-                $uploadedFile->storeAs('photos', $fileName, 'public');
-
-                // Изменение размера фотографии и ее сохранение
-                $image = Image::make(storage_path("app/public/photos/$fileName"))
-                    ->fit(300, 300, function ($constraint) {
-                        $constraint->upsize(); // Сохранение пропорций
-                    })
-                    ->orientate() // Автоматический поворот при необходимости
-                    ->encode('jpg', 80); // Сохранение в формате jpg с качеством 80%
-
-                Storage::put("public/photos/$fileName", $image);
-
-                // Обновление имени файла в базе данных
-                $employee->update(['photo' => $fileName]);
-            }
+            $this->imageService->processImage($request, $employee);
 
             if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator->messages())->withInput();
             }
 
             // Обновление данных существующего сотрудника
-            $employee->update($validatedData);
+            $employee->update($request->except('photo'));
+
+            Log::info("Employee updated successfully: ID {$employee->id}");
 
             // Перенаправление после успешного обновления
             return redirect()->route('employees.index')->with('success', 'Сотрудник успешно обновлен');
         } catch (ValidationException $e) {
             // Обработка ошибок валидации
+            Log::error("Validation error during employee update: " . $e->getMessage());
             return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            // Обработка других ошибок
+            Log::error("Error updating employee: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Произошла ошибка при обновлении сотрудника.')->withInput();
         }
     }
 
 
 
 
+
+    public function cancelUpdate() {
+        return redirect()->route('employees.index')->with('status', 'Изменения отменены');
+    }
+
     public function destroy($id)
     {
         try {
+            \Log::info("Destroy method called for employee with ID $id");
+
             // Находим сотрудника, которого мы собираемся удалить
             $employeeToDelete = Employee::findOrFail($id);
 
@@ -216,7 +239,9 @@ class EmployeeController extends Controller
             $employeeToDelete->delete();
 
             return redirect()->route('employees.index')->with('success', 'Сотрудник успешно удален');
+            \Log::info("Employee with ID $id has been deleted."); // Добавьте эту строку
         } catch (\Exception $e) {
+            \Log::error("Error deleting employee with ID $id: " . $e->getMessage());
             return redirect()->route('employees.index')->with('error', 'Произошла ошибка при удалении сотрудника.');
         }
     }

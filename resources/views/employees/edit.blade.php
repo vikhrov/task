@@ -27,34 +27,38 @@
                                 <img src="{{ asset("storage/photos/{$employee->photo}") }}" alt="Employee Photo" class="img-thumbnail mb-2" style="max-width: 300px; max-height: 300px;">
                             @else
                                 <!-- Рисуем квадрат, если фото не загружено -->
-                                <div class="img-thumbnail mb-2" style="width: 100px; height: 100px; border: 1px solid #ddd;"></div>
+                                <div class="img-thumbnail mb-2" style="width: 100px; height: 100px; border: 1px solid #ddd; text-align: center;">JPG 300x300px 80% quality</div>
                             @endif
 
                             <!-- Поле для загрузки нового фото -->
                             <input type="file" class="form-control-file" id="photo" name="photo">
-                        </div>
 
+                            <small class="form-text text-muted">File format jpg, png up to 5Mb,the minimum size of 300x300px</small>
+
+                        </div>
                         @if ($errors->has('photo'))
                             <span class="text-danger" role="alert">
                                 <strong>{{ $errors->first('photo') }}</strong>
                             </span>
                         @endif
 
-                        <!-- Здесь добавьте поля для редактирования информации о сотруднике -->
                         <div class="form-group">
                             <label for="name">Name:</label>
                             <input type="text" name="name" value="{{ old('name', $employee->name) }}" class="form-control">
                             @error('name')
                             <span class="text-danger">{{ $message }}</span>
                             @enderror
+                            <small id="charCount" style="text-align: end" class="form-text text-muted"></small>
                         </div>
 
                         <div class="form-group">
                             <label for="phone_number">Phone:</label>
-                            <input type="text" name="phone_number" value="{{ $employee->phone_number }}" class="form-control">
+                            <input type="text" name="phone_number" value="{{ old('phone_number', $employee->phone_number) }}" class="form-control">
                             @error('phone_number')
                             <span class="text-danger">{{ $message }}</span>
                             @enderror
+                            <small class="form-text text-muted" style="text-align: end">Required format +380XXXXXXXXX</small>
+
                         </div>
 
                         <div class="form-group">
@@ -89,9 +93,15 @@
 
                         <div class="form-group">
                             <label for="parent_id">Manager:</label>
-                            <input type="text" name="parent_id" class="form-control" value="{{ optional($employee->manager)->name }}" id="autocomplete" />
+                            <select class="select-manager form-control" name="parent_id">
+                                @foreach($managers as $manager)
+                                    <option value="{{ $manager->id }}" {{ $employee->parent_id == $manager->id ? 'selected' : '' }}>
+                                        {{ $manager->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('parent_id')
-                            <span class="text-danger">{{ $message }}</span>
+                            <div class="alert alert-danger">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -117,18 +127,20 @@
                                 </div>
                             </div>
                         </div>
-{{--                        <input type="hidden" name="photo" value="{{ $employee->photo }}">--}}
+
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">Update</button>
                         </div>
-{{--                        <div class="form-group">--}}
-{{--                            <button type="submit" class="btn btn-secondary">Cancel</button>--}}
-{{--                        </div>--}}
+
+                        <a href="{{ route('employees.cancelUpdate') }}" class="btn btn-secondary">Cancel</a>
+
                     </form>
                 </div>
             </div>
         </div>
     </div>
+
+
 
 
 @endsection

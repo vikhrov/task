@@ -29,10 +29,12 @@ Route::get('/employees/create', [EmployeeController::class, 'create'])->name('em
 Route::post('/employees/store', [EmployeeController::class, 'store'])->name('employees.store');
 Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
 Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+Route::get('/employees/cancel', [EmployeeController::class, 'cancelUpdate'])->name('employees.cancelUpdate');
+
 Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
 
 Route::get('/get-managers', [EmployeeController::class, 'getManagers'])->name('get-managers');
-
+Route::get('/getEmployees', [EmployeeController::class, 'getEmployees'])->name('getEmployees');
 
 Route::resource('positions', PositionController::class);
 Route::get('/positions/create', [PositionController::class, 'create'])->name('positions.create');
@@ -47,7 +49,7 @@ Route::delete('/positions/{position}', [PositionController::class, 'destroy'])->
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+//    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
 //    Route::view('about', 'about')->name('about');
 //
 //    Route::get('users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');

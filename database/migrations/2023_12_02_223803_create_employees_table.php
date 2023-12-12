@@ -23,12 +23,13 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->unsignedBigInteger('admin_created_id')->nullable();
             $table->unsignedBigInteger('admin_updated_id')->nullable();
+            $table->integer('level')->nullable();
             $table->timestamps();
 
             $table->foreign('position_id')->references('id')->on('positions'); // Доданий зовнішній ключ на таблицю positions
             $table->foreign('parent_id')->references('id')->on('employees');
-            $table->foreign('admin_created_id')->references('id')->on('admins');
-            $table->foreign('admin_updated_id')->references('id')->on('admins');
+            $table->foreign('admin_created_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('admin_updated_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

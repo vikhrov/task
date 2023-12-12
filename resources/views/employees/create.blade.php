@@ -26,6 +26,8 @@
                             @error('photo')
                             <div class="alert alert-danger">{{ $message }}</div>
                             @enderror
+                            <small class="form-text text-muted">File format jpg, png up to 5Mb,the minimum size of 300x300px</small>
+
                         </div>
 
                         <div class="form-group">
@@ -34,7 +36,9 @@
                             @error('name')
                             <div class="alert alert-danger">{{ $message }}</div>
                             @enderror
+                            <small id="charCount" style="text-align: end" class="form-text text-muted"></small>
                         </div>
+
 
                         <div class="form-group">
                             <label for="position_id">Position:</label>
@@ -60,6 +64,7 @@
                             @error('phone_number')
                             <div class="alert alert-danger">{{ $message }}</div>
                             @enderror
+                            <small class="form-text text-muted" style="text-align: end">Required format +380XXXXXXXXX</small>
                         </div>
 
                         <div class="form-group">
@@ -80,20 +85,22 @@
 
                         <div class="form-group">
                             <label for="parent_id">Manager:</label>
-                            <select class="form-control select-manager" name="parent_id">
+                            <select class="select-manager form-control" name="parent_id">
                                 @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}">{{ $manager->name }}</option>
                                 @endforeach
                             </select>
+                            @error('parent_id')
+                            <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">Add Employee</button>
                         </div>
+                        <a href="{{ route('employees.cancelUpdate') }}" class="btn btn-secondary">Cancel</a>
 
-                        @error('all')
-                            <div class="alert alert-danger">{{ $message }}</div>
-                        @enderror
+
                     </form>
                 </div>
             </div>

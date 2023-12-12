@@ -3,11 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Laravel') }}</title>
     <script
         src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
         crossorigin="anonymous"></script>
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -18,8 +22,6 @@
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 
-    <!-- Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 
     @yield('styles')
@@ -85,14 +87,7 @@
     <!-- /.control-sidebar -->
 
     <!-- Main Footer -->
-    <footer class="main-footer">
-        <!-- To the right -->
-        <div class="float-right d-none d-sm-inline">
-            Anything you want
-        </div>
-        <!-- Default to the left -->
-        <strong>Copyright &copy; 2014-2021 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
-    </footer>
+
 </div>
 <!-- ./wrapper -->
 
@@ -100,7 +95,7 @@
 
 
 <!-- DataTables -->
-<script src="/DataTables/datatables.js"></script>
+{{--<script src="/DataTables/datatables.js"></script>--}}
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 
 
@@ -111,20 +106,79 @@
 <!-- Ваши собственные скрипты -->
 
 
+
+
 <script>
-    new DataTable('#employees');
+    $(document).ready(function() {
+        new DataTable('#positions', {
+            order: [[1, 'desc']]
+        });
+    });
 </script>
 
 <script>
-    new DataTable('#positions',  {
-        order: [[1, 'desc']]
+    $(document).ready(function(){
+        // $('#empTable').DataTable({
+        new DataTable('#empTable', {
+            order: [[1, 'asc']],
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('getEmployees') }}",
+            columns: [
+                {data: 'photo' },
+                { data: 'name' },
+                { data: 'position' },
+                { data: 'date_of_employment' },
+                { data: 'phone_number' },
+                { data: 'email' },
+                { data: 'salary' },
+                {
+                    data: null,
+                    render: function(data, type, row) {
+                        return '<a href="{{ url('/employees') }}/' + row.id + '/edit" class="btn btn-sm btn-light">' +
+                            '<span class="d-flex align-items-center">' +
+                            '<i class="far fa-edit mr-1"></i></span></a>' +
+                            '<form id="deleteForm-' + row.id + '" action="{{ url('/employees') }}/' + row.id + '" method="POST" style="display: inline;">' +
+                            '@csrf' +
+                            '@method("DELETE")' +
+                            '<button type="submit" class="btn btn-sm btn-light" onclick="return confirm(\'Вы уверены?\')">' +
+                            '<span class="d-flex align-items-center">' +
+                            '<i class="far fa-trash-alt mr-1"></i></span></button></form>';
+                    },
+                    name: 'action',
+                    orderable: false
+
+                }
+            ]
+        });
     });
 </script>
+
+
+
 
 @vite('resources/js/app.js')
 
 <!-- Ваши собственные скрипты -->
 @yield('scripts')
+
+<script>
+    $(document).ready(function() {
+        $('.select-manager').select2();
+
+        var inputElement = $('input[name="name"]');
+        var charCount = $('#charCount');
+
+        if (inputElement.length) {
+            // Учтем начальную длину текста
+            charCount.text(inputElement.val().length + '/256');
+
+            inputElement.on('input', function () {
+                charCount.text($(this).val().length + '/256');
+            });
+        }
+    });
+</script>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
 </html>
