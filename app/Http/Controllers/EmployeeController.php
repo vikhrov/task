@@ -78,9 +78,15 @@ class EmployeeController extends Controller
 
         $managers = Employee::where('level', '<>', 5)
             ->where('name', 'LIKE', '%' . $term . '%')
+            ->take(100)
             ->get(['id', 'name']);
 
-        return response()->json($managers);
+        $formattedManagers = [];
+        foreach ($managers as $manager) {
+            $formattedManagers[] = ['id' => $manager->id, 'text' => $manager->name];
+        }
+
+        return response()->json($formattedManagers);
     }
 
     // Fetch records
@@ -103,12 +109,34 @@ class EmployeeController extends Controller
 
         // Total records
         $totalRecords = Employee::select('count(*) as allcount')->count();
-        $totalRecordswithFilter = Employee::select('count(*) as allcount')->where('name', 'like', '%' .$searchValue . '%')->count();
-
+        $totalRecordswithFilter = Employee::leftJoin('positions', 'employees.position_id', '=', 'positions.id')
+            ->where(function ($query) use ($searchValue) {
+                $query->where('employees.name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('employees.date_of_employment', 'like', '%' . $searchValue . '%')
+                    ->orWhere('employees.email', 'like', '%' . $searchValue . '%')
+                    ->orWhere('positions.name', 'like', '%' . $searchValue . '%'); // Условие для поиска по должности
+            })
+            ->count();
         // Fetch records
-        $records = Employee::orderBy($columnName,$columnSortOrder)
-            ->where('employees.name', 'like', '%' .$searchValue . '%')
-            ->select('employees.*')
+//        $records = Employee::orderBy($columnName,$columnSortOrder)
+//            ->where('employees.name', 'like', '%' .$searchValue . '%')
+//                ->orWhere('employees.date_of_employment', 'like', '%' . $searchValue . '%')
+//                ->orWhere('employees.email', 'like', '%' . $searchValue . '%')
+//
+//            ->select('employees.*')
+//            ->skip($start)
+//            ->take($rowperpage)
+//            ->get();
+        $records = Employee::with('position')
+            ->leftJoin('positions', 'employees.position_id', '=', 'positions.id')
+            ->select('employees.*', 'positions.name as position_name') // Добавление алиаса для positions.name
+            ->where(function ($query) use ($searchValue) {
+                $query->where('employees.name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('employees.date_of_employment', 'like', '%' . $searchValue . '%')
+                    ->orWhere('employees.email', 'like', '%' . $searchValue . '%')
+                    ->orWhere('positions.name', 'like', '%' . $searchValue . '%');
+            })
+            ->orderBy($columnName == 'position' ? 'position_name' : $columnName, $columnSortOrder) // Использование алиаса для сортировки
             ->skip($start)
             ->take($rowperpage)
             ->get();
@@ -209,7 +237,6 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         try {
-            \Log::info("Destroy method called for employee with ID $id");
 
             // Находим сотрудника, которого мы собираемся удалить
             $employeeToDelete = Employee::findOrFail($id);
@@ -224,7 +251,6 @@ class EmployeeController extends Controller
 
             // Если не удалось найти нового начальника того же уровня
             if (!$newManager) {
-                \Log::error('Не удалось найти нового начальника для подчиненных.');
                 return redirect()->route('employees.index')->with('error', 'Не удалось найти нового начальника для подчиненных.');
             }
 
@@ -239,9 +265,7 @@ class EmployeeController extends Controller
             $employeeToDelete->delete();
 
             return redirect()->route('employees.index')->with('success', 'Сотрудник успешно удален');
-            \Log::info("Employee with ID $id has been deleted."); // Добавьте эту строку
         } catch (\Exception $e) {
-            \Log::error("Error deleting employee with ID $id: " . $e->getMessage());
             return redirect()->route('employees.index')->with('error', 'Произошла ошибка при удалении сотрудника.');
         }
     }

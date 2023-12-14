@@ -52,9 +52,5 @@ class Employee extends Model
             $employee->admin_updated_id = Auth::id(); // Айди админа, который обновляет запись
         });
     }
-
-
-
-
 }
 

@@ -92,7 +92,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="parent_id">Manager:</label>
+                            <label for="parent_id">Head:</label>
                             <select class="select-manager form-control" name="parent_id">
                                 @foreach($managers as $manager)
                                     <option value="{{ $manager->id }}" {{ $employee->parent_id == $manager->id ? 'selected' : '' }}>

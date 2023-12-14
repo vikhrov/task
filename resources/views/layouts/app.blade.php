@@ -154,31 +154,71 @@
     });
 </script>
 
-
-
-
 @vite('resources/js/app.js')
 
 <!-- Ваши собственные скрипты -->
 @yield('scripts')
 
+{{--<script>--}}
+{{--    $(document).ready(function() {--}}
+{{--        $('.select-manager').select2();--}}
+
+{{--        var inputElement = $('input[name="name"]');--}}
+{{--        var charCount = $('#charCount');--}}
+
+{{--        if (inputElement.length) {--}}
+{{--            // Учтем начальную длину текста--}}
+{{--            charCount.text(inputElement.val().length + '/256');--}}
+
+{{--            inputElement.on('input', function () {--}}
+{{--                charCount.text($(this).val().length + '/256');--}}
+{{--            });--}}
+{{--        }--}}
+{{--    });--}}
+{{--</script>--}}
+
 <script>
     $(document).ready(function() {
-        $('.select-manager').select2();
-
-        var inputElement = $('input[name="name"]');
-        var charCount = $('#charCount');
-
-        if (inputElement.length) {
-            // Учтем начальную длину текста
-            charCount.text(inputElement.val().length + '/256');
-
-            inputElement.on('input', function () {
-                charCount.text($(this).val().length + '/256');
+        function initializeSelect2() {
+            $('.select-manager').select2({
+                ajax: {
+                    url: '/get-managers', // Замените на ваш путь к контроллеру
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            term: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1 // Минимальное количество символов перед выполнением запроса
             });
+
+            var inputElement = $('input[name="name"]');
+            var charCount = $('#charCount');
+
+            if (inputElement.length) {
+                // Учтем начальную длину текста
+                charCount.text(inputElement.val().length + '/256');
+
+                inputElement.on('input', function () {
+                    charCount.text($(this).val().length + '/256');
+                });
+            }
         }
+
+        $(document).ready(function() {
+            initializeSelect2();
+        });
     });
 </script>
+
 </body>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
 </html>
