@@ -43,7 +43,7 @@ class EmployeeController extends Controller
         return view('employees.create', compact('managers', 'positions', 'employee'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ImageService $imageService)
     {
         try {
             $validatedData = $request->all();
@@ -193,7 +193,7 @@ class EmployeeController extends Controller
         return view('employees.edit', ['employee' => $employee, 'managers' => $managers, 'positions' => $positions]);
     }
 
-    public function update(Request $request, Employee $employee)
+    public function update(Request $request, Employee $employee, ImageService $imageService)
     {
         try {
             $validatedData = $request->all();

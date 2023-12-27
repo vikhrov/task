@@ -2,10 +2,19 @@
 
 namespace App\Models;
 
+use Database\Factories\EmployeeFactory;
+use Eloquent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int $id
+ *
+ * @method static EmployeeFactory factory($count = null, $state = [])
+ *
+ * @mixin Eloquent
+ */
 class Employee extends Model
 {
     protected $table = 'employees';
@@ -51,6 +60,11 @@ class Employee extends Model
         static::updating(function ($employee) {
             $employee->admin_updated_id = Auth::id(); // Айди админа, который обновляет запись
         });
+    }
+
+    protected static function newFactory(): EmployeeFactory
+    {
+        return new EmployeeFactory();
     }
 }
 

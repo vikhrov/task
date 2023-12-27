@@ -9,17 +9,20 @@ use Faker\Factory as Faker;
 
 class PositionsTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $faker = Faker::create();
 
-        foreach (range(1, 250) as $index) {
-            DB::table('positions')->insert([
+        $positions = [];
+
+        foreach (range(1, 250) as $ignored) {
+            $positions[] = [
                 'name' => $faker->randomElement(['Менеджер', 'Програміст', 'Дизайнер', 'Аналітик', 'Тестувальник']),
-            ]);
+                'created_at' => $created = $faker->dateTimeBetween(),
+                'updated_at' => $faker->dateTimeBetween($created),
+            ];
         }
+
+        DB::table('positions')->insert($positions);
     }
 }

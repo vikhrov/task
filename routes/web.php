@@ -24,12 +24,23 @@ Route::get('/', function () {
 
 
 //Route::post('/employees/store', [EmployeeController::class, 'storeAjax'])->name('employees.storeAjax');
-Route::get('/employees', [App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index');
-Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
-Route::post('/employees/store', [EmployeeController::class, 'store'])->name('employees.store');
-Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
-Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-Route::get('/employees/cancel', [EmployeeController::class, 'cancelUpdate'])->name('employees.cancelUpdate');
+Route::prefix('employees')->as('employees.')->group(function () {
+    Route::get('/', [EmployeeController::class, 'index'])->name('index');
+    Route::get('create', [EmployeeController::class, 'create'])->name('create');
+    Route::post('store', [EmployeeController::class, 'store'])->name('store');
+    Route::get('cancel', [EmployeeController::class, 'cancelUpdate'])->name('cancelUpdate');
+    Route::prefix('{employee}')->group(function () {
+        Route::put('/', [EmployeeController::class, 'update'])->name('update');
+        Route::get('edit', [EmployeeController::class, 'edit'])->name('edit');
+    });
+});
+
+//Route::get('/employees', [App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index');
+//Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+//Route::post('/employees/store', [EmployeeController::class, 'store'])->name('employees.store');
+//Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+//Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+//Route::get('/employees/cancel', [EmployeeController::class, 'cancelUpdate'])->name('employees.cancelUpdate');
 
 Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
 
