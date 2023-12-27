@@ -1,0 +1,83 @@
+version: '1'
+
+services:
+    app:
+        build:
+            context: ./docker/app
+            dockerfile: Dockerfile
+            args:
+                - WWWUSER
+                - WWWGROUP
+        container_name: '${APP_NAME}-app'
+        tty: true
+        ports:
+            - '${APP_PORT:-80}:80'
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        environment:
+            XDEBUG_CONFIG: "remote_host=host.docker.internal remote_enable=1"
+            PHP_IDE_CONFIG: "serverName=Docker"
+        networks:
+            - my-task-network
+        depends_on:
+            - mysql
+#            - redis
+#            - postgres
+
+    mysql:
+        image: '${PLATFORM_ARCHITECTURE}/mysql:8.0'
+        command: mysqld --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        container_name: '${APP_NAME}-mysql'
+        ports:
+            - '${FORWARD_DB_PORT:-33061}:3306'
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        volumes:
+            -  my-task-mysql:/var/lib/mysql
+        networks:
+            - my-task-network
+
+#    postgres:
+#        container_name: '${APP_NAME}-postgres'
+#        image: postgres:latest
+#        volumes:
+#            - my-task-postgres:/var/lib/postgresql/data:delegated
+#        ports:
+#            - '${FORWARD_DB_PORT:-5532}:5432'
+#        networks:
+#            - my-task-network
+#        environment:
+#            POSTGRES_USER: ${DB_USERNAME}
+#            POSTGRES_DB: ${DB_DATABASE}
+#            POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+#    redis:
+#        image: '${PLATFORM_ARCHITECTURE}/redis:alpine'
+#        container_name: '${APP_NAME}-redis'
+#        ports:
+#            - '${FORWARD_REDIS_PORT:-6379}:6379'
+#        volumes:
+#            - my-task-redis:/data
+#        networks:
+#            - my-task-network
+#        healthcheck:
+#            test: [ "CMD", "redis-cli", "ping" ]
+#            retries: 3
+#            timeout: 5s
+
+networks:
+    my-task-network:
+        driver: bridge
+
+volumes:
+    my-task-mysql:
+        driver: local
+#    my-task-postgres:
+#        driver: local
+#    my-task-redis:
+#        driver: local
