@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 /**
+ * @property int $id
+ * @property string $name
+ *
  * @mixin Eloquent
  */
 class Position extends Model

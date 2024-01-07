@@ -9,7 +9,6 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use RuntimeException;
 
-
 class EmployeesTableSeeder extends Seeder
 {
     public function run(): void

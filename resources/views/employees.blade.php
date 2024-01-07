@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
@@ -20,24 +19,12 @@
     <!-- /.content-header -->
     <div class="content">
         <div class="container-fluid">
-
-            <table id="empTable" class="display" style="width:100%">
-                <thead>
-                <tr>
-                    <th>Photo</th>
-                    <th>Name</th>
-                    <th>Position</th>
-                    <th>Date of employment</th>
-                    <th>Phone number</th>
-                    <th>Email</th>
-                    <th>Salary</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-            </table>
+            <table id="empTable" class="display" style="width:100%"></table>
         </div><!-- /.container-fluid -->
     </div>
     <!-- /.content -->
+@endsection
 
-
+@section('scripts')
+    @vite('resources/js/employees.js')
 @endsection

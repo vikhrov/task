@@ -116,44 +116,6 @@
     });
 </script>
 
-<script>
-    $(document).ready(function(){
-        // $('#empTable').DataTable({
-        new DataTable('#empTable', {
-            order: [[1, 'asc']],
-            processing: true,
-            serverSide: true,
-            ajax: "{{ route('getEmployees') }}",
-            columns: [
-                {data: 'photo' },
-                { data: 'name' },
-                { data: 'position' },
-                { data: 'date_of_employment' },
-                { data: 'phone_number' },
-                { data: 'email' },
-                { data: 'salary' },
-                {
-                    data: null,
-                    render: function(data, type, row) {
-                        return '<a href="{{ url('/employees') }}/' + row.id + '/edit" class="btn btn-sm btn-light">' +
-                            '<span class="d-flex align-items-center">' +
-                            '<i class="far fa-edit mr-1"></i></span></a>' +
-                            '<form id="deleteForm-' + row.id + '" action="{{ url('/employees') }}/' + row.id + '" method="POST" style="display: inline;">' +
-                            '@csrf' +
-                            '@method("DELETE")' +
-                            '<button type="submit" class="btn btn-sm btn-light" onclick="return confirm(\'Вы уверены?\')">' +
-                            '<span class="d-flex align-items-center">' +
-                            '<i class="far fa-trash-alt mr-1"></i></span></button></form>';
-                    },
-                    name: 'action',
-                    orderable: false
-
-                }
-            ]
-        });
-    });
-</script>
-
 @vite('resources/js/app.js')
 
 <!-- Ваши собственные скрипты -->

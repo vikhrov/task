@@ -2,14 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Database\Factories\EmployeeFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * @property int $id
+ * @property string $name
+ * @property int $position_id
+ * @property Carbon $date_of_employment
+ * @property string $phone_number
+ * @property string $email
+ * @property int $salary
+ * @property string $photo
+ * @property ?int $parent_id
+ * @property ?int $admin_created_id
+ * @property ?int $admin_updated_id
+ * @property int $level
+ * @property ?Carbon $created_at
+ * @property ?Carbon $updated_at
+ *
+ * @property-read Position $position
+ * @property-read Employee $manager
  *
  * @method static EmployeeFactory factory($count = null, $state = [])
  *
@@ -17,6 +35,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class Employee extends Model
 {
+    use HasFactory;
+
     protected $table = 'employees';
     protected $fillable = [
         'name',
@@ -37,19 +57,21 @@ class Employee extends Model
         'level' => '5',
     ];
 
-    use HasFactory;
+    protected $casts = [
+        'date_of_employment' => 'date',
+    ];
 
-    public function position()
+    public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class, 'position_id');
     }
 
-    public function manager()
+    public function manager(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'parent_id');
     }
 
-    protected static function boot()
+    protected static function boot(): void
     {
         parent::boot();
 
