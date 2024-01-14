@@ -3,12 +3,15 @@
 namespace App\Repositories;
 
 use App\Models\Employee;
+use App\Models\Position;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 class EmployeeRepository
 {
     public function __construct(
-        private Employee $model
+        private readonly Employee $model
     ) {
     }
 
@@ -30,5 +33,16 @@ class EmployeeRepository
             "{$table}.salary",
             "{$table}.photo",
         ])->orderBy($column, $order);
+    }
+
+    public function setNewPositionsForOldPosition(Position $position, SupportCollection $positionIds): void
+    {
+        $this->model::wherePositionId($position->id)
+            ->chunkById(1000, function (Collection $collection) use ($positionIds) {
+            $collection->each(function (Employee $employee) use ($positionIds) {
+                $employee->position_id = (int) $positionIds->random();
+                $employee->save();
+            });
+        });
     }
 }

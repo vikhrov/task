@@ -1,10 +1,11 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Actions\Position\DeletePositionAction;
+use App\Exceptions\EntityDeleteException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\Position;
-use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 
 class PositionController extends Controller
@@ -60,24 +61,18 @@ class PositionController extends Controller
         return redirect()->route('positions.index')->with('success', 'Название должности успешно обновлено');
     }
 
-    public function destroy(Position $position)
+    public function destroy(Position $position, DeletePositionAction $deletePositionAction): RedirectResponse
     {
-        // Получение сотрудников, связанных с этой должностью
-        $employees = $position->employees;
+        // TODO: rewrite this code with use validation request
+        // TODO: resolve this code when another functionality will be implemented
+        $response = redirect()->route('positions.index');
 
-        // Переназначение каждому сотруднику случайной другой должности
-        foreach ($employees as $employee) {
-            $newPosition = Position::where('id', '<>', $position->id)->inRandomOrder()->first();
-
-            // Переназначение должности сотруднику
-            $employee->position_id = $newPosition->id;
-            $employee->save();
+        try {
+            $deletePositionAction($position);
+        } catch (EntityDeleteException $e) {
+            return $response->with('error', $e->getMessage());
         }
 
-        // Удаление должности
-        $position->delete();
-
-        return redirect()->route('positions.index')->with('success', 'Должность успешно удалена');
+        return $response->with('success', 'Должность успешно удалена');
     }
-
 }

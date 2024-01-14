@@ -6,39 +6,45 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    private string $tableName = 'employees';
     public function up(): void
     {
-        Schema::create('employees', function (Blueprint $table) {
+        Schema::create($this->tableName, function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('position_id'); // Змінено поле на ID посади
+            $table->foreignId('position_id')
+                ->index()
+                ->constrained('positions')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->date('date_of_employment');
             $table->string('phone_number');
             $table->string('email')->unique();
             $table->integer('salary');
             $table->string('photo');
-            $table->unsignedBigInteger('parent_id')->nullable();
-            $table->unsignedBigInteger('admin_created_id')->nullable();
-            $table->unsignedBigInteger('admin_updated_id')->nullable();
-            $table->integer('level')->nullable();
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained($this->tableName)
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+            $table->foreignId('admin_created_id')
+                ->nullable()
+                ->constrained('users')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+            $table->foreignId('admin_updated_id')
+                ->nullable()
+                ->constrained('users')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+            $table->smallInteger('level')->nullable();
             $table->timestamps();
-
-            $table->foreign('position_id')->references('id')->on('positions'); // Доданий зовнішній ключ на таблицю positions
-            $table->foreign('parent_id')->references('id')->on('employees');
-            $table->foreign('admin_created_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('admin_updated_id')->references('id')->on('users')->onDelete('set null');
+//            $table->softDeletes();
         });
     }
 
-
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('employees');
+        Schema::dropIfExists($this->tableName);
     }
 };

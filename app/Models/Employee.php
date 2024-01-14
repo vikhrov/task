@@ -5,10 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Database\Factories\EmployeeFactory;
 use Eloquent;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
+use phpDocumentor\Reflection\Types\Static_;
 
 /**
  * @property int $id
@@ -30,6 +32,7 @@ use Illuminate\Support\Facades\Auth;
  * @property-read Employee $manager
  *
  * @method static EmployeeFactory factory($count = null, $state = [])
+ * @method static Builder|Employee wherePositionId(int $positionId)
  *
  * @mixin Eloquent
  */
